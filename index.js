@@ -15,8 +15,17 @@ if (tokenArg) {
 const bot = new Bot(token);
 
 bot.on('message:text', async (ctx) => {
-  const res = await fetch('https://api.ipify.org').then(res => res.text());
-  ctx.reply("your ip address is " + res);
+    try {
+        const res = await fetch('https://api.ipify.org').then(res => res.text());
+        ctx.reply("your ip address is " + res);
+    } catch (error) {
+        console.log(error);
+        if (error.message) {
+            ctx.reply(error.message);
+        } else {
+            ctx.reply(JSON.stringify(error))
+        }
+    }
 })
 
 bot.start();
