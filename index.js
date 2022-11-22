@@ -12,22 +12,30 @@ if (tokenArg) {
   throw new Error("Provide token using `--token=123456:tokenexample` argument")
 }
 
-const bot = new Bot(token);
+function startBot() {
+  try {
+    const bot = new Bot(token);
 
-bot.on('message:text', async (ctx) => {
-    try {
+    bot.on('message:text', async (ctx) => {
+      try {
         const res = await fetch('https://api.ipify.org').then(res => res.text()).catch((err) => {
-          ctx.reply("cannot fetch api address ");
+          ctx.reply('cannot fetch api address ');
         });
-        ctx.reply("your ip address is " + res);
-    } catch (error) {
-        console.log('error has occured',error);
+        ctx.reply('your ip address is ' + res);
+      } catch (error) {
+        console.log('error has occured', error);
         if (error.message) {
-            ctx.reply(error.message);
+          ctx.reply(error.message);
         } else {
-            ctx.reply(JSON.stringify(error))
+          ctx.reply(JSON.stringify(error));
         }
-    }
-})
+      }
+    });
 
-bot.start();
+    bot.start();
+  } catch (error) {
+    startBot();
+  }
+}
+
+startBot()
