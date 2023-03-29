@@ -1,41 +1,39 @@
 import { Bot } from 'grammy';
-import { argv } from 'node:process'
+import { argv } from 'node:process';
 
 const tokenArgName = '--token=';
-const tokenArg = argv.find(arg => arg.indexOf(tokenArgName) === 0)
+const tokenArg = argv.find(arg => arg.startsWith(tokenArgName));
 
-let token = '';
-
-if (tokenArg) {
-  token = tokenArg.substring(tokenArgName.length, tokenArg.length)
-} else {
-  throw new Error("Provide token using `--token=123456:tokenexample` argument")
+if (!tokenArg) {
+  throw new Error("Provide token using `--token=123456:tokenexample` argument");
 }
 
-function startBot() {
-  try {
-    const bot = new Bot(token);
+const token = tokenArg.substring(tokenArgName.length);
 
-    bot.on('message:text', async (ctx) => {
-      try {
-        const res = await fetch('https://api.ipify.org').then(res => res.text()).catch((err) => {
-          ctx.reply('cannot fetch api address ');
-        });
-        ctx.reply('your ip address is ' + res);
-      } catch (error) {
-        console.log('error has occured', error);
-        if (error.message) {
-          ctx.reply(error.message);
-        } else {
-          ctx.reply(JSON.stringify(error));
-        }
+async function startBot() {
+  const bot = new Bot(token);
+
+  bot.on('message:text', async (ctx) => {
+    try {
+      const res = await fetch('https://api.ipify.org');
+      if (!res.ok) {
+        throw new Error('Failed to fetch IP address');
       }
-    });
+      const ip = await res.text();
+      await ctx.reply(`Your IP address is ${ip}`);
+    } catch (error) {
+      console.error('Error has occurred', error);
+      const errorMessage = error.message || JSON.stringify(error);
+      await ctx.reply(errorMessage);
+    }
+  });
 
-    bot.start();
+  try {
+    await bot.start();
   } catch (error) {
-    startBot();
+    console.error('Failed to start bot', error);
+    setTimeout(startBot, 5000);
   }
 }
 
-startBot()
+startBot();
